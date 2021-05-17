@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Tweet Memo</title>
+  <!-- <link rel="stylesheet" href="css/jquery-ui.min.css"> -->
+  <link rel="stylesheet" href="css/styleHaruo.css">
+  <!-- <link rel="stylesheet" href="css/jquery-ui.min.css"> -->
+
+</head>
+
+<body>
+  <header class="header">
+    <!-- <h1>Memo Pad 0.1</h1> -->
+    <h1>Tweet Memo 1.1 ~ Spring.ver ~</h1>
+  </header>
+
+  <main class="main">
+    <div id="controller" class="buttons">
+      <!-- <a type="button" id="add-button" value="New" class="btn-animation-02">
+        <span>New<span></a> -->
+      <a type="button" class="btn-animation-02" id="Text-clear"><span>Text Clear</span></a>
+      <!-- <input type='text' class="form-control" id="nameInput" placeholder="YourName" height="36px"> 
+        </div>  -->
+      <div>
+        <p id="nameInput" class="yourname">Haruo</p>
+      </div>
+      <textarea name="" cols="60" class="form-control" id="messageInput"></textarea>
+    </div>
+
+    <!-- <div id="sticky-note-container" class="container"></div> -->
+    <!-- <ul id="sticky-note-container" class="container"> </ul> -->
+    <!-- <div id="output"></div> -->
+    <!-- <div>
+      <ul id="output_left"></ul>
+      <ul id="output_right"></ul>
+    </div> -->
+    <!-- 出力先 -->
+    <div width="800px">
+
+
+      <div class="box-left">
+        <ul id="output"></ul>
+      </div>
+      <!-- <div class="box-left">
+        <ul id="output_left"></ul>
+      </div>
+      <div class="box-right">
+        <ul id="output_right"></ul>
+      </div> -->
+
+    </div>
+
+
+
+    <div class="fluid"></div>
+    <div class="fluid2"></div>
+    <div class="fluid3"></div>
+    <div class="fluid4"></div>
+    <div class="fluid5"></div>
+
+  </main>
+  <footer class="copyrights">
+    <small>G's Company</small>
+  </footer>
+
+  <script src="external/jquery/jquery.js"></script>
+  <script src="jquery-ui.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase.js"></script>
+
+  <script>
+    // Your web app's Firebase configuration  firebase基本設定
+    var firebaseConfig = {
+      //
+      authDomain: "start-miyakawa.firebaseapp.com",
+      projectId: "start-miyakawa",
+      storageBucket: "start-miyakawa.appspot.com",
+      messagingSenderId: "154756590751",
+      appId: "1:154756590751:web:ce0da9505ffaf9a999c6aa"
+    };
+    // Initialize Firebase  firebase基本設定
+    firebase.initializeApp(firebaseConfig);
+    //cloudfirestorageの場所を定義する処理   firebase基本設定
+    var db = firebase.firestore().collection('chat2.0')
+  </script>
+
+  <script>
+    // 日時をいい感じの形式にする関数定義
+    function convertFromFirestoreTimestampToDatetime(timestamp) {
+      const _d = timestamp ? new Date(timestamp * 1000) : new Date();
+      const Y = _d.getFullYear();
+      const m = (_d.getMonth() + 1).toString().padStart(2, '0');
+      const d = _d.getDate().toString().padStart(2, '0');
+      const H = _d.getHours().toString().padStart(2, '0');
+      const i = _d.getMinutes().toString().padStart(2, '0');
+      const s = _d.getSeconds().toString().padStart(2, '0');
+      return `${Y}/${m}/${d} ${H}:${i}:${s}`;
+    }
+    //新しいメモタグを追加する機能定義
+    // function getNewNote() {
+    //   return '<div class="note1">' +
+    //     '<ul class="expanding"></ul>' +
+    //     '<input class="delete-button" type="button" value=" × ">' +
+    //     '<input data-color="rgba(229, 233, 245, 0.25)" class="color-button" type="button" value=" W ">' +
+    //     '</div>';
+    // }
+
+    // $('#add-button').on('click', function () {
+    //   var $note = $(getNewNote());
+    //   $note.draggable();
+    //   $('#sticky-note-container').append($note);
+    // });
+    // //各メモのサイズ変更、ドラッグ可能にする機能定義
+    // function appendFunctions($note) {
+    //   $note.resizable();
+    //   $note.draggable();
+    //   // autosize($note.find('.expanding'));
+    //   $note.children(".delete-button")
+    //     .on('click', function () {
+    //       $(this).parents('.note1').remove();
+    //     });
+    //   $note.children(".color-button")
+    //     .on('click', function () {
+    //       const color = $(this).data('color');
+    //       $(this).parents('.note1').css('background-color', color);
+    //     });
+    // }
+    //各メモのサイズ変更、ドラッグ可能にする機能定義
+    // function appendFunctions($note) {
+    //   $note.resizable();
+    // $note.draggable();
+
+    // autosize($note.find('.expanding'));
+    //生成されたノートを削除するスイッチ
+    // $note.children(".delete-button")
+    //   .on('click', function () {
+    //     $(this).parents('.note1').remove();
+    //   });
+    //   //生成されたノートの色を変えるスイッチ
+    // $note.children(".color-button")
+    //   .on('click', function () {
+    //     const color = $(this).data('color');
+    //     $(this).parents('.note1').css('background-color', color);
+    //   });
+    // }
+
+    // onSnapshotでcloud firestoreのデータ変更時に実行される!
+    db.orderBy('time', 'desc').onSnapshot(function (querySnapshot) {
+      // querySnapshot.docsにcloud firestoreのデータが配列形式で入る 
+      // 必要なデータだけが入った新しい配列dataArrayを生成する
+      const dataArray = [];
+      querySnapshot.docs.forEach(function (doc) {
+        const data = {    //紫dataをdata①とする
+          id: doc.id,  //ドキュメント名(ランダム英数字)
+          data: doc.data(),  //緑dataはfirestore内のname,text,timeとかをさすdata②とする
+        }
+        dataArray.push(data);  // 必要なデータだけが入った配列に代入
+      });
+
+      //画面に表示するためにtagArryというli向けの配列を生成し、最後にテキストエリアにプッシュする
+      // 「`」で囲んでタグ文字列を表現.「${}」で変数を埋め込み 
+      const tagArray = []; // `dataArray`は前回出てきたオブジェクトの配列 
+
+      dataArray.forEach(function (data) {  //オレンジ色のdataはdata①を指す
+        tagArray.push(`
+          <li id=${data.id} class="memo_box">
+            <p class="memo_name">${data.data.name}</p>   
+            <p class="memo_text">${data.data.text}</p> 
+            <p class="memo_time">${convertFromFirestoreTimestampToDatetime(data.data.time.seconds)}</p>
+          </li> `);
+        //オレンジ色dataの次のdataはdata②のこと
+      });
+      $('#output').html(tagArray);
+    });
+    //   if ("${ data.data.name }" == "Natsumi") {
+    //     //アカウントによって変わる
+    //     console.log("${data.data.name}");
+    //     $('#output_left').html(tagArray);
+    //     console.log("私はなつみだよ！");
+    //   } else {
+    //     $('#output_right').html(tagArray);
+    //     console.log("私はなつみじゃないよ！");
+    //   };
+    // });
+  </script>
+
+  <script>
+    //フォームに入力された情報をENTERキーを押した時にdbに書き込む処理
+    $('#messageInput').keypress(function (e) {
+      if (e.keyCode == 13) {
+        // var nameField = $('#nameInput');
+        db.add({    // dbが送信先 送信データはオブジェクトの形 
+          name: $('#nameInput').text(),   // inputの入力値
+          text: $('#messageInput').val(),   // textareaの入力値
+          time: firebase.firestore.FieldValue.serverTimestamp(),// 登録日時
+        });
+        $('#messageInput').val('');  // 送信後にtextareaを空にする処理
+      }
+    });
+    // var username = nameField.val();
+    // var message = messageField.val();
+  </script>
+
+  <script>
+    //全てのメモをデリートする
+    $('#All-delete-button').on('click', function () {
+      $(".note1").remove();
+    });
+    //全てのメモをデリートする →タグ自体を削除してしまうため復旧不可になる 
+    // $('#All-delete-button').on('click', function () {
+    //   $("#output").remove();
+    // });
+    //2.text clear クリックイベント
+    $('#Text-clear').on('click', function () {
+      $('.expanding').val('');
+    });
+    //2.data clear クリックイベント
+    $('#Data-clear').on('click', function () {
+      localStorage.removeItem('memo');   //ローカルストレージは洋梨
+    });
+
+
+
+  </script>
+
+
+
+</body>
+
+</html>
